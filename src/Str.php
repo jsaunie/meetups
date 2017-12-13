@@ -61,6 +61,30 @@ class Str
         return $this;
     }
 
+    public function slugCase(): self
+    {
+        $this->string = strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', $this->string));
+        $this->replace(' ', '-')
+            ->replace('_', '-')
+            ->replace('--', '-')
+            ->lowerCase();
+        return $this;
+    }
+
+    public function studlyCase(): self
+    {
+        $this->string = strtolower(preg_replace('/[A-Z]/', ' $0', $this->string));
+        $this->replace('_', ' ')
+            ->replace('-', ' ')
+            ->ucwords()
+            ->replace(' ', '');
+        return $this;
+    }
+
+    public function titleCase(): self{
+        $this->studlyCase();
+        return $this;
+    }
 
     public function toString()
     {
