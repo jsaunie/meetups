@@ -25,4 +25,12 @@ class StrTest extends TestCase
         $this->assertTrue(Str::on('My String')->camelCase()->toString() === 'myString'); // true
     }
 
+    public function testExo3(){
+        $this->assertTrue(Str::on('my_string')->snakeCase()->toString() === 'my_string'); // true
+        $this->assertTrue(Str::on('myString')->snakeCase()->toString() === 'my_string'); // true
+        $this->assertTrue(Str::on('my-string')->snakeCase()->toString() === 'my_string'); // true
+        $this->assertTrue(Str::on('my string')->snakeCase()->toString() === 'my_string'); // true
+        $this->assertTrue(Str::on('My String')->snakeCase()->toString() === 'my_string'); // true
+    }
+
 }

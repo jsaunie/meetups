@@ -29,20 +29,16 @@ class Str
         return $this;
     }
 
+    public function lowerCase(): self
+    {
+        $this->string = strtolower($this->string);
+        return $this;
+    }
+
     public function replace(string $search, string $replace): self
     {
         $this->string = str_replace($search, $replace, $this->string);
         return $this;
-    }
-
-    public function toString()
-    {
-        return $this->__toString();
-    }
-
-    public function __toString()
-    {
-        return $this->string;
     }
 
     public function camelCase(): self
@@ -57,12 +53,25 @@ class Str
 
     public function snakeCase(): self
     {
-        $this->replace(' ', '_')->lowerCase();
+        $this->string = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $this->string));
+        $this->replace(' ', '_')
+            ->replace('__', '_')
+            ->replace('-', '_')
+            ->lowerCase();
+        return $this;
     }
 
-    public function lowerCase(){
-        $this->string = strtolower($this->string);
+
+    public function toString()
+    {
+        return $this->__toString();
     }
+
+    public function __toString()
+    {
+        return $this->string;
+    }
+
 
 }
 
