@@ -75,6 +75,17 @@ class Str
         return new Str($string);
     }
 
+    public function kebabCase(): self
+    {
+        $str = new Str(preg_replace('/\s[A-Z]/', '-$0', $this->string));
+        $string = $str->lowerCase()
+            ->replace(' ', '-')
+            ->replace('_', '-')
+            ->replace('--', '-')
+            ->lowerCase();
+        return new Str($string);
+    }
+
     public function studlyCase(): self
     {
         $str = new Str(preg_replace('/(?<!\s)([A-Z])/', '$0', strtolower($this->string)));
