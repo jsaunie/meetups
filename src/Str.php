@@ -11,7 +11,7 @@ class Str
 
     public function __construct($string)
     {
-        $this->string = $string;
+        $this->string = (string)$string;
     }
 
     public static function on(string $string): self
@@ -21,93 +21,96 @@ class Str
 
     public function ucwords(): self
     {
-        return new Str(ucwords($this->string));
+        return $this->build(ucwords($this->string));
     }
 
     public function lcfirst(): self
     {
-        return new Str(lcfirst($this->string));
+        return $this->build(lcfirst($this->string));
     }
 
     public function lowerCase(): self
     {
-        return new Str(strtolower($this->string));
+        return $this->build(strtolower($this->string));
     }
 
-    public function replace(string $search, string $replace): self
+    public function replace($search, string $replace): self
     {
-        return new Str(str_replace($search, $replace, $this->string));
+        return $this->build(str_replace($search, $replace, $this->string));
+    }
+
+    private function tolower(): self
+    {
+        return $this->build(strtolower($this->string));
+    }
+
+    private function pregReplace(string $expression, string $replace): self
+    {
+        return $this->build(preg_replace($expression, $replace, $this->string));
     }
 
     // --------------------------
 
     public function camelCase(): self
     {
-        $str = new Str(preg_replace('/(\s)([A-Z])/', '$0', strtolower($this->string)));
-        $string = $str->replace('_', ' ')
-            ->replace('-', ' ')
+        return $this->pregReplace('/(\s)([A-Z])/', '$0')
+            ->tolower()
+            ->replace(['-','_'], ' ')
             ->replace('s', 'S')
             ->ucwords()
             ->replace(' ', '')
             ->lcfirst();
-        return new Str($string);
     }
 
     public function snakeCase(): self
     {
-        $str = new Str(preg_replace('/\s[A-Z]/', '$0', strtolower($this->string)));
-        $string = $str
+        return $this->pregReplace('/\s[A-Z]/', '$0')
+            ->tolower()
             ->replace('s', '_s')
-            ->replace(' ', '_')
-            ->replace('-', '_')
-            ->replace('__', '_');
-        return new Str($string);
+            ->replace([' ', '-', '__'], '_');
     }
 
     public function slugCase(): self
     {
-        $str = new Str(preg_replace('/\s[A-Z]/', '-$0', $this->string));
-        $string = $str->lowerCase()
-            ->replace(' ', '-')
-            ->replace('_', '-')
-            ->replace('--', '-')
+        return $this->pregReplace('/\s[A-Z]/', '-$0')
+            ->tolower()
+            ->replace([' ', '_', '--'], '-')
             ->lowerCase();
-        return new Str($string);
     }
 
     public function kebabCase(): self
     {
-        $str = new Str(preg_replace('/\s[A-Z]/', '-$0', $this->string));
-        $string = $str->lowerCase()
-            ->replace(' ', '-')
-            ->replace('_', '-')
-            ->replace('--', '-')
+        return $this->pregReplace('/\s[A-Z]/', '-$0')
+            ->tolower()
+            ->replace([' ', '_', '--'], '-')
             ->lowerCase();
-        return new Str($string);
     }
 
     public function studlyCase(): self
     {
-        $str = new Str(preg_replace('/(?<!\s)([A-Z])/', '$0', strtolower($this->string)));
-        $string = $str->replace('_', ' ')
-            ->replace('-', ' ')
+        return $this->pregReplace('/(?<!\s)([A-Z])/', '$0')
+            ->tolower()
+            ->replace(['_', '-'], ' ')
             ->ucwords()
             ->replace('s', 'S')
             ->replace(' ', '');
-        return new Str($string);
     }
 
     public function titleCase(): self
     {
-        $str = new Str(preg_replace('/(?<!\s)([A-Z])/', '$0', strtolower($this->string)));
-        $string = $str->replace('_', ' ')
-            ->replace('-', ' ')
+        return $this->pregReplace('/(?<!\s)([A-Z])/', '$0')
+            ->tolower()
+            ->replace(['_', '-'], ' ')
             ->ucwords()
             ->replace(' ', '');
-        return new Str($string);
     }
 
     // -------------------------
+
+    private function build(string $string): self
+    {
+        return new self($string);
+    }
 
     public function toString(): string
     {
@@ -126,6 +129,16 @@ class Str
         }
         $methodName = lcfirst(self::on($name)->replace('to', ''));
         return (string)self::on($arguments[0])->{$methodName}();
+    }
+
+    public function __get(string $method)
+    {
+        return (string)$this->{$method}()->toString();
+    }
+
+    public function __invoke()
+    {
+        return $this->string;
     }
 
 }
