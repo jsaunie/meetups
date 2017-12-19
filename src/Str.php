@@ -11,12 +11,17 @@ class Str
 
     public function __construct($string)
     {
-        $this->string = (string)$string;
+        $this->string = $string;
     }
 
-    public static function on(string $string): self
+    public static function on($string): self
     {
         return new self($string);
+    }
+
+    public static function checkIf(string $string): self
+    {
+        return self::on($string);
     }
 
     public function ucwords(): self
@@ -34,14 +39,14 @@ class Str
         return $this->build(strtolower($this->string));
     }
 
-    public function replace($search, string $replace): self
+    public function trim($search): self
     {
-        return $this->build(str_replace($search, $replace, $this->string));
+        return $this->build(trim($this->string, $search));
     }
 
-    private function tolower(): self
+    public function replace($search, $replace): self
     {
-        return $this->build(strtolower($this->string));
+        return $this->build(str_replace($search, $replace, $this->string));
     }
 
     private function pregReplace(string $expression, string $replace): self
@@ -51,45 +56,39 @@ class Str
 
     // --------------------------
 
-    public function camelCase(): self
+    public function camelCase()
     {
-        return $this->pregReplace('/(\s)([A-Z])/', '$0')
-            ->tolower()
-            ->replace(['-','_'], ' ')
-            ->replace('s', 'S')
-            ->ucwords()
-            ->replace(' ', '')
-            ->lcfirst();
+        return $this->studlyCase()->lcfirst();
     }
 
     public function snakeCase(): self
     {
         return $this->pregReplace('/\s[A-Z]/', '$0')
-            ->tolower()
+            ->lowerCase()
             ->replace('s', '_s')
             ->replace([' ', '-', '__'], '_');
     }
 
     public function slugCase(): self
     {
-        return $this->pregReplace('/\s[A-Z]/', '-$0')
-            ->tolower()
-            ->replace([' ', '_', '--'], '-')
-            ->lowerCase();
+        /* Regex source https://stackoverflow.com/questions/2955251/php-function-to-make-slug-url-string */
+        return $this->pregReplace('/~[^\pL\d]+~u/', '-')// replace non letter or digits by -
+        ->pregReplace('/~[^-\w]+~/', '')// remove unwanted characters
+        ->trim('-')// trim
+        ->pregReplace('/~-+~/', '-')// remove duplicate -
+        ->lowerCase()
+            ->replace([' ', '_', '--'], '-');
     }
 
     public function kebabCase(): self
     {
-        return $this->pregReplace('/\s[A-Z]/', '-$0')
-            ->tolower()
-            ->replace([' ', '_', '--'], '-')
-            ->lowerCase();
+        return $this->slugCase();
     }
 
     public function studlyCase(): self
     {
-        return $this->pregReplace('/(?<!\s)([A-Z])/', '$0')
-            ->tolower()
+        return $this->pregReplace('/(\s)([A-Z])/', '$0')
+            ->lowerCase()
             ->replace(['_', '-'], ' ')
             ->ucwords()
             ->replace('s', 'S')
@@ -98,11 +97,7 @@ class Str
 
     public function titleCase(): self
     {
-        return $this->pregReplace('/(?<!\s)([A-Z])/', '$0')
-            ->tolower()
-            ->replace(['_', '-'], ' ')
-            ->ucwords()
-            ->replace(' ', '');
+        return $this->studlyCase();
     }
 
     // -------------------------
@@ -114,12 +109,12 @@ class Str
 
     public function toString(): string
     {
-        return $this->string;
+        return (string)$this->string;
     }
 
     public function __toString(): string
     {
-        return $this->string;
+        return $this->toString();
     }
 
     public static function __callStatic($name, $arguments)
@@ -127,18 +122,18 @@ class Str
         if (!strpos('to', $name) === 0) {
             throw new Exception("Cette méthode n'existe pas");
         }
-        $methodName = lcfirst(self::on($name)->replace('to', ''));
+        $methodName = (string)self::on($name)->replace('to', '')->lcfirst()->toString();
         return (string)self::on($arguments[0])->{$methodName}();
     }
 
-    public function __get(string $method)
+    public function __get(string $name)
     {
-        return (string)$this->{$method}()->toString();
+        return (string)$this->{$name}();
     }
 
     public function __invoke()
     {
-        return $this->string;
+        return $this->toString();
     }
 
 }
